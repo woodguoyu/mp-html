@@ -131,7 +131,9 @@ export default {
     node
   },
   mounted () {
-    for (this.root = this.$parent; this.root.$options.name !== 'mp-html'; this.root = this.root.$parent);
+    this.$nextTick(() => {
+      for (this.root = this.$parent; this.root.$options.name !== 'mp-html'; this.root = this.root.$parent);
+    })
     // #ifdef H5 || APP-PLUS
     if (this.opts[0]) {
       let i
@@ -223,7 +225,7 @@ export default {
     imgLongTap (e) {
       // #ifdef APP-PLUS
       const attrs = this.childs[e.currentTarget.dataset.i].attrs
-      if (!attrs.ignore) {
+      if (this.opts[3] && !attrs.ignore) {
         uni.showActionSheet({
           itemList: ['保存图片'],
           success: () => {

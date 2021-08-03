@@ -161,7 +161,7 @@ Parser.prototype.expose = function () {
   // #ifndef APP-PLUS-NVUE
   for (let i = this.stack.length; i--;) {
     const item = this.stack[i]
-    if (item.name === 'a' || item.c) return
+    if (item.c || item.name === 'a' || item.name === 'video' || item.name === 'audio') return
     item.c = 1
   }
   // #endif
@@ -213,7 +213,7 @@ Parser.prototype.parseStyle = function (node) {
   const styleObj = {}
   let tmp = ''
 
-  if (attrs.id) {
+  if (attrs.id && !this.xml) {
     // 暴露锚点
     if (this.options.useAnchor) {
       this.expose()
@@ -677,7 +677,7 @@ Parser.prototype.popNode = function () {
 
   Object.assign(styleObj, this.parseStyle(node))
 
-  if (parseInt(styleObj.width) > windowWidth) {
+  if (node.name !== 'table' && parseInt(styleObj.width) > windowWidth) {
     styleObj['max-width'] = '100%'
     styleObj['box-sizing'] = 'border-box'
   }
@@ -811,8 +811,10 @@ Parser.prototype.popNode = function () {
                 style += `;grid-column-start:${col};grid-column-end:${col + 1}`
               }
               // 记录下方单元格被占用
-              for (let k = 1; k < td.attrs.rowspan; k++) {
-                map[(row + k) + '.' + col] = 1
+              for (let rowspan = 1; rowspan < td.attrs.rowspan; rowspan++) {
+                for (let colspan = 0; colspan < (td.attrs.colspan || 1); colspan++) {
+                  map[(row + rowspan) + '.' + (col - colspan)] = 1
+                }
               }
             }
             if (style) {
@@ -882,12 +884,12 @@ Parser.prototype.popNode = function () {
         children[i] = {
           name: 'div',
           attrs: {
-            style: 'display:inline-block'
+            style: 'display:inline-block;text-align:center'
           },
           children: [{
             name: 'div',
             attrs: {
-              style: 'font-size:50%;text-align:start'
+              style: 'font-size:50%;' + (children[i + 1].attrs.style || '')
             },
             children: children[i + 1].children
           }, children[i]]

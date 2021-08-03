@@ -290,7 +290,9 @@ function Editable (vm) {
         },
         children: [{
           name: 'video',
-          attrs: {},
+          attrs: {
+            controls: 'T'
+          },
           children: [],
           src
         }]
@@ -302,7 +304,16 @@ function Editable (vm) {
    * @description 在光标处插入一个音频
    */
   vm.insertAudio = function () {
-    vm.getSrc && vm.getSrc('audio').then(src => {
+    vm.getSrc && vm.getSrc('audio').then(attrs => {
+      let src
+      if (attrs.src) {
+        src = attrs.src
+        attrs.src = undefined
+      } else {
+        src = attrs
+        attrs = {}
+      }
+      attrs.controls = 'T'
       if (typeof src === 'string') {
         src = [src]
       }
@@ -313,7 +324,7 @@ function Editable (vm) {
         },
         children: [{
           name: 'audio',
-          attrs: {},
+          attrs,
           children: [],
           src
         }]
@@ -476,6 +487,16 @@ Editable.prototype.onUpdate = function (content, config) {
         }, 0)
       }
     }
+  }
+}
+
+Editable.prototype.onParse = function (node) {
+  // 空白单元格可编辑
+  if (this.vm.editable && (node.name === 'td' || node.name === 'th') && !this.vm.getText(node.children)) {
+    node.children.push({
+      type: 'text',
+      text: ''
+    })
   }
 }
 
